@@ -22,12 +22,13 @@ IOC_DATA = os.getcwd()
 
 
 class CameraDriver(Driver):
-    def __init__(self, pvdb, platform, readout_grp, interface, prefix, ioc_prefix, ioc_name, config_op=None):
+    def __init__(self, pvdb, dtype, platform, readout_grp, interface, prefix, ioc_prefix, ioc_name, config_op=None):
         super(CameraDriver, self).__init__()
         self.run = True
         self.acq_count = 0
         self.prefix = prefix
         self.pvdb = pvdb
+        self.dtype = dtype
         self.config_op = config_op
         self.need_conf = threading.Event()
         self.setParam('READOUT', readout_grp)
@@ -96,7 +97,7 @@ class CameraDriver(Driver):
                 evt_ts = ts_data.secs + ts_data.nsecs/1.e9
                 LOG.debug(ts_data, cmd_data)
 
-                frame = np.random.normal(offset, scale, (rows, cols)).astype(np.uint16)
+                frame = np.random.normal(offset, scale, (rows, cols)).astype(self.dtype)
                 self.acq_count+=1
 
                 # Update PV data
@@ -232,10 +233,14 @@ def run_ioc(camera_type, ioc_name, prefix, platform, readout_grp, interface):
         LOG.error('Unsupported camera type: %s', camera_type)
         return 2
 
+    dtype = db.get_dtype(camera_type)
+
+    os.environ['EPICS_CA_MAX_ARRAY_BYTES'] = str(db.get_max_array_size(camera_type))
+
     server = SimpleServer()
     server.createPV(prefix, pvdb)
     server.createPV(ioc_prefix, IocAdmin.ioc_pvdb)
-    driver = CameraDriver(pvdb, platform, readout_grp, interface, prefix, ioc_prefix, ioc_name)
+    driver = CameraDriver(pvdb, dtype, platform, readout_grp, interface, prefix, ioc_prefix, ioc_name)
     LOG.debug('%s camera server is now started', camera_type)
     try:
         while driver.run:
