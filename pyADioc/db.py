@@ -34,6 +34,7 @@ CONFIG = {
                 'enums': [
                     '0.5 ns',
                     '1 ns',
+                    '2 ns',
                     '5 ns',
                     '10 ns',
                     '20 ns',
@@ -47,10 +48,6 @@ CONFIG = {
                     '10 us',
                     '20 us',
                     '50 us',
-                    '100 us',
-                    '200 us',
-                    '500 us',
-                    '1 ms',
                 ],
                 'value': 0,
                 'autosave' : True,
